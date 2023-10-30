@@ -69,6 +69,19 @@ class Api {
     .then(res => this._getResponseData(res))
   }
 
+  postNewUser({email, password}) {
+    return fetch('https://auth.nomoreparties.co/signup', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        password,
+        email
+      })
+    })
+  }
+
   _likeCard(cardId) {
     return fetch(`${this._baseUrl}/cards/${cardId}/likes`, {
       method: 'PUT',

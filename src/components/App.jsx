@@ -1,4 +1,5 @@
 import React, { useState , useEffect} from 'react'; // импорт библиотеки
+import { Route, Switch } from 'react-router-dom'
 
 import Header from './Header';
 import Main from './Main';
@@ -11,6 +12,7 @@ import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddCardPopup from './AddCardPopup';
 import ConfirmDeletePopup from './ConfirmDeletePopup';
+import Register from './Register'
 
 function App() {
   /** Стэйты состояния открытия попапов. */
@@ -36,6 +38,7 @@ function App() {
   const [buttonSaveAvatar, setButtonSaveAvatar] = useState('Сохранить')
   const [buttonCreateCard, setButtonCreateCard] = useState('Создать')
   const [buttonConfirm, setButtonConfirm] = useState('Да')
+  const [buttonRegistration, setButtonRegistration] = useState('Зарегестрироваться')
 
   /** Получаем данные с сервера по объединенному запросу и записываем ответы в глобальные стэйты. */
   useEffect(() => {    
@@ -76,6 +79,19 @@ function App() {
         console.log(err);
       })
       .finally(() => setButtonSaveProfile('Сохранить'));    
+  }
+
+  function handleRegisterUser({ email, password}) {
+    setButtonRegistration('Регистрация...')
+    api.postNewUser({email, password})
+      .then(userInformation => {
+        console.log(userInformation)
+        
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => setButtonRegistration('Зарегестрироваться'));    
   }
   /** Отправляем ссылку нового аватара пользователя на сервер, меняем подпись кнопки сабмита при загрузке,
     * полученный ответ записываем в глобальный стэйт. */
@@ -174,13 +190,16 @@ function App() {
     setIsOpenAddCardPopup(false)
     setIsOpenConfirmPopup(false)
     setSelectedCard(false)
-  };    
+  };
+  
+const isAuth = false
 
   return (
     <CurrentUserContext.Provider value={currentUser}>        
       <div className="content">
         <Header />
-        <Main 
+        <Register isAuth={isAuth} onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>
+        {/* <Main 
           cards = {cards}
           onCardLike={handleCardLike}
           onCardClick={handleCardClick}
@@ -188,7 +207,7 @@ function App() {
           onEditProfile={isEditProfilePopupOpen}         
           onEditAvatar={isEditAvatarPopupOpen} 
           onAddPlace={isAddPlacePopupOpen} />
-        <Footer />       
+        <Footer />        */}
         <EditProfilePopup 
           buttonText={buttonSaveProfile} 
           onUpdateUser={handleUpdateUser} 

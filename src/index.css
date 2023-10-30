@@ -50,4 +50,19 @@
 @import url(./blocks/popup/__form/_size/popup__form_size_zeroInput.css);
 @import url(./blocks/popup/__title/_size/popup__title_size_zeroInput.css);
 @import url(./blocks/popup/__button-clear-input/popup__button-clear-input.css);
-@import url(./blocks/popup/__button-clear-input/_status/popup__button-clear-input_status_active.css)
+@import url(./blocks/popup/__button-clear-input/_status/popup__button-clear-input_status_active.css);
+@import url(./blocks/regist/regist.css);
+@import url(./blocks/regist/__block-form/regist__block-form.css);
+@import url(./blocks/regist/__button-clear-input/regist__button-clear-input.css);
+@import url(./blocks/regist/__button-clear-input/_status/regist__button-clear-input_status_active.css);
+@import url(./blocks/regist/__button-save/regist__button-save.css);
+@import url(./blocks/regist/__button-save/_inactive/regist__button-save_inactive.css);
+@import url(./blocks/regist/__form-field/regist__form-field.css);
+@import url(./blocks/regist/__form/regist__form.css);
+@import url(./blocks/regist/__input/regist__input.css);
+@import url(./blocks/regist/__text-error/regist__text-error.css);
+@import url(./blocks/regist/__text-error/_active/regist__text-error_active.css);
+@import url(./blocks/regist/__text/regist__text.css);
+@import url(./blocks/regist/__title/regist__title.css);
+@import url(./blocks/regist/__text-link/regist__text-link.css);
+
