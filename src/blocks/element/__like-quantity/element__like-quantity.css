@@ -1,0 +1,9 @@
+.element__like-quantity {
+  margin: 0;
+  color: #000;
+  font-family: "Inter", sans-serif, Arial;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 13px;
+  text-align: center;
+}

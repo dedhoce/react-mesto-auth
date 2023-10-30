@@ -1,0 +1,12 @@
+.element__mask-group {
+  width: 100%;
+  max-height: 282px;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.element__mask-group:hover {
+  opacity: 0.8;
+}

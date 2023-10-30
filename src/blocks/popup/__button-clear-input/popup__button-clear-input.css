@@ -1,0 +1,21 @@
+.popup__button-clear-input {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url(../../../images/png-transparent-x-mark.svg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.5s ease;
+    opacity: 0;
+    visibility: hidden;
+  }
+  .popup__button-clear-input:hover {
+    opacity: 0.6;
+  }
