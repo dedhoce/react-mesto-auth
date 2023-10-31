@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import {Link} from 'react-router-dom';
 
-function Register({onRegisterUser, buttonText }) {      
+function Login({onEnterUser, buttonText}) {      
   //стэйты значений input.value
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('') 
@@ -30,20 +29,20 @@ function Register({onRegisterUser, buttonText }) {
   //передаем данные стэйтов в запрос к серверу при сабмите
   function handleSubmit(e) {  
     e.preventDefault();  
-    onRegisterUser({
+    onEnterUser({
       email, password
     });
     setEmail('');
     setPassword('');
-    setEmailErrorMessage('');
-    setPasswordErrorMessage('');
-    setIsEmailValid(false);
-    setIsPasswordValid(false);
+    setEmailErrorMessage('')
+    setPasswordErrorMessage('')
+    setIsEmailValid(false)
+    setIsPasswordValid(false)
   } 
   return (
     <div className='regist'>     
     <div className='regist__block-form'>
-      <h2 className="regist__title">Регистрация</h2>        
+      <h2 className="regist__title">Вход</h2>        
         <form onSubmit={handleSubmit} name={email} className="regist__form" noValidate>
           <label className="regist__form-field">            
             <input                  
@@ -94,11 +93,10 @@ function Register({onRegisterUser, buttonText }) {
             disabled={!isFormValid}>
             {buttonText}
           </button>          
-        </form>
-        <h3 className='regist__text'>Уже зарегестрированны? <Link to="/sign-in" className='regist__text-link'>Войти </Link></h3>
+        </form>        
     </div>
     </div>    
   )
 }
 
-export default Register
+export default Login

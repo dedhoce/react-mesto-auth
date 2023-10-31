@@ -1,5 +1,5 @@
 import React, { useState , useEffect} from 'react'; // импорт библиотеки
-import { Route, Switch } from 'react-router-dom'
+import { Routes, Route, useNavigate} from 'react-router-dom'
 
 import Header from './Header';
 import Main from './Main';
@@ -12,7 +12,10 @@ import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddCardPopup from './AddCardPopup';
 import ConfirmDeletePopup from './ConfirmDeletePopup';
-import Register from './Register'
+import Register from './Register';
+import Login from './Login';
+import ProtectedRouteElement from './ProtectedRoute';
+
 
 function App() {
   /** Стэйты состояния открытия попапов. */
@@ -39,9 +42,18 @@ function App() {
   const [buttonCreateCard, setButtonCreateCard] = useState('Создать')
   const [buttonConfirm, setButtonConfirm] = useState('Да')
   const [buttonRegistration, setButtonRegistration] = useState('Зарегестрироваться')
+  const [buttonEnter, setButtonEnter] = useState('Вход')
+
+  /** Стэйт авторизации пользователя. */
+  const [loggedIn, setLoggedIn] = useState(false)
+  const [userAuthInfo, setUserAuthInfo] = useState({})
+  
+  const handleLogin = () => {
+    setLoggedIn(true);
+  }
 
   /** Получаем данные с сервера по объединенному запросу и записываем ответы в глобальные стэйты. */
-  useEffect(() => {    
+  useEffect(() => {   
     Promise.all([
       api.getInitialCards(),
       api.getUserInfo()    
@@ -52,7 +64,7 @@ function App() {
       })             
       .catch((err) => {
         console.log(err); 
-      })
+      })    
   }, [])
   
   /** Проверяем наличие нашего лайка, по нему определяем в Api какой запрос отправить лайк или дизлайк. */
@@ -80,18 +92,57 @@ function App() {
       })
       .finally(() => setButtonSaveProfile('Сохранить'));    
   }
-
+  /** Отправляем данные для регимстрации пользователя, меняем подпись кнопки сабмита при загрузке,
+    *  при положительном ответе переходим в окно входа. */
+  const navigate = useNavigate();
   function handleRegisterUser({ email, password}) {
     setButtonRegistration('Регистрация...')
-    api.postNewUser({email, password})
-      .then(userInformation => {
-        console.log(userInformation)
-        
+    api.regisrationNewUser({email, password})
+      .then(res => {
+        navigate('/sign-in', {replace: true})        
       })
       .catch((err) => {
         console.log(err);
       })
       .finally(() => setButtonRegistration('Зарегестрироваться'));    
+  }
+  function handleEnterUser({ email, password}) {
+    setButtonEnter('Проверка...')
+    api.getUserToken({email, password})
+      .then(res => {
+        console.log(res)
+        if(res.token) {
+          handleLogin()
+          navigate('/', {replace: true})
+        }       
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => setButtonEnter('Вход'));    
+  }
+
+  useEffect(() => {
+    handleTokenCheck();
+  }, [])
+
+  const handleTokenCheck = () => {
+    if (localStorage.getItem('jwt')){
+      const localJWT = localStorage.getItem('jwt');
+      api.checkUserToken(localJWT).then((res) => {        
+        if (res){
+          setUserAuthInfo(res)
+          setLoggedIn(true);          
+          navigate("/", {replace: true})
+        }
+        navigate("/sign-in", {replace: true})
+      });
+    }
+  }  
+  const handleSignOut = () => {
+    setLoggedIn(false);  
+    localStorage.removeItem('jwt');
+    navigate("/sign-in", {replace: true})  
   }
   /** Отправляем ссылку нового аватара пользователя на сервер, меняем подпись кнопки сабмита при загрузке,
     * полученный ответ записываем в глобальный стэйт. */
@@ -191,23 +242,38 @@ function App() {
     setIsOpenConfirmPopup(false)
     setSelectedCard(false)
   };
-  
-const isAuth = false
 
   return (
     <CurrentUserContext.Provider value={currentUser}>        
-      <div className="content">
-        <Header />
-        <Register isAuth={isAuth} onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>
-        {/* <Main 
-          cards = {cards}
-          onCardLike={handleCardLike}
-          onCardClick={handleCardClick}
-          onCardDelete={handleDeleteClick}
-          onEditProfile={isEditProfilePopupOpen}         
-          onEditAvatar={isEditAvatarPopupOpen} 
-          onAddPlace={isAddPlacePopupOpen} />
-        <Footer />        */}
+      <div className="content">      
+        <Routes>
+          
+          <Route path='/sign-up' element={  
+            <> 
+              <Header emailUser = {userAuthInfo} loggedIn={loggedIn} onExit={handleSignOut} registration = {true}/>          
+              <Register onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>
+            </>
+          } />
+          <Route path='/sign-in' element={  
+            <>
+              <Header emailUser = {userAuthInfo} loggedIn={loggedIn} onExit={handleSignOut} registartion = {false}/>           
+              <Login onEnterUser={handleEnterUser} buttonText={buttonEnter}/>
+            </>
+          } />
+          <Route path='/' element={ <ProtectedRouteElement component={
+            Main} 
+            cards = {cards}
+            onCardLike={handleCardLike}
+            onCardClick={handleCardClick}
+            onCardDelete={handleDeleteClick}
+            onEditProfile={isEditProfilePopupOpen}         
+            onEditAvatar={isEditAvatarPopupOpen} 
+            onAddPlace={isAddPlacePopupOpen}
+            
+           loggedIn={loggedIn}/>            
+          } />
+        </Routes>          
+        {loggedIn && <Footer />}        
         <EditProfilePopup 
           buttonText={buttonSaveProfile} 
           onUpdateUser={handleUpdateUser} 
@@ -229,7 +295,7 @@ const isAuth = false
           idCard={idDeleteCard} 
           isOpen={isOpenConfirmPopup}
           onClose={closeAllPopups} />                
-        <ImagePopup card={selectedCard} onClose={closeAllPopups}/>       
+        <ImagePopup card={selectedCard} onClose={closeAllPopups}/>            
       </div>    
     </CurrentUserContext.Provider>
   );
