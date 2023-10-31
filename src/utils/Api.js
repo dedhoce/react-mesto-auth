@@ -69,6 +69,44 @@ class Api {
     .then(res => this._getResponseData(res))
   }
 
+  regisrationNewUser({email, password}) {
+    return fetch('https://auth.nomoreparties.co/signup', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        password,
+        email
+      })
+    })
+  }
+
+  checkUserToken(localJWT) {
+    return fetch('https://auth.nomoreparties.co/users/me', {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization" : `Bearer ${localJWT}`
+      }      
+    })
+    .then(res => this._getResponseData(res))
+  }
+
+  getUserToken({email, password}) {
+    return fetch('https://auth.nomoreparties.co/signin', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        password,
+        email
+      })
+    })
+    .then(res => this._getResponseData(res))
+  }
+
   _likeCard(cardId) {
     return fetch(`${this._baseUrl}/cards/${cardId}/likes`, {
       method: 'PUT',
