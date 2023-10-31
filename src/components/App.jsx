@@ -54,6 +54,8 @@ function App() {
     setLoggedIn(true);
   }
 
+  const [infoTooltip, setInfoTooltip] = useState({title: 'Вы успешно зарегестрировались', img: 'Union.png'})
+
   /** Получаем данные с сервера по объединенному запросу и записываем ответы в глобальные стэйты. */
   useEffect(() => {   
     Promise.all([
@@ -101,11 +103,17 @@ function App() {
     setButtonRegistration('Регистрация...')
     api.regisrationNewUser({email, password})
       .then(res => {
+        if(!res.ok) {
+          return Promise.reject(`Ошибка: ${res.status}`)            
+        }
+        setInfoTooltip({title: 'Вы успешно зарегестрировались!', img: 'Union.png'})
         setIsOpenInfoTooltip(true)
-        navigate('/sign-in', {replace: true})        
+        navigate('/sign-in', {replace: true})              
       })
       .catch((err) => {
         console.log(err);
+        setInfoTooltip({title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'})
+        setIsOpenInfoTooltip(true)
       })
       .finally(() => setButtonRegistration('Зарегестрироваться'));    
   }
@@ -114,7 +122,8 @@ function App() {
     setButtonEnter('Проверка...')
     api.getUserToken({email, password })
       .then(res => {        
-        if(res.token) {          
+        if(res.token) {
+          setUserAuthInfo({email})          
           localStorage.setItem('jwt', res.token)
           handleLogin()
           navigate('/', {replace: true})
@@ -122,6 +131,8 @@ function App() {
       })
       .catch((err) => {
         console.log(err);
+        setInfoTooltip({title: 'Неверный логин или пароль!', img: 'Union-red.png'})
+        setIsOpenInfoTooltip(true)
       })
       .finally(() => setButtonEnter('Вход'));    
   }
@@ -198,7 +209,7 @@ function App() {
       .finally(() => setButtonConfirm('Да'));    
   }
   /** Проверяем состояние стэйтов открытия попапов, если хоть один открыт - true. */
-  const isSomePopupOpen = isOpenProfilePopup || isOpenAvatarPopup || isOpenAddCardPopup || isOpenConfirmPopup || selectedCard
+  const isSomePopupOpen = isOpenProfilePopup || isOpenAvatarPopup || isOpenAddCardPopup || isOpenConfirmPopup || selectedCard || isOpenInfoTooltip
   /** Если хоть один попап открыт то вешаем слушатели на документ. */
   useEffect(() => {
     function closePopupByEsc (key) {    
@@ -248,6 +259,8 @@ function App() {
     setIsOpenAddCardPopup(false)
     setIsOpenConfirmPopup(false)
     setSelectedCard(false)
+    setIsOpenInfoTooltip(false)
+    setInfoTooltip({})
   };
 
   return (
@@ -298,9 +311,9 @@ function App() {
         <ImagePopup card={selectedCard} onClose={closeAllPopups}/>
         <InfoTooltip 
           isOpen={isOpenInfoTooltip}
-          title 
-          icon 
-          onClose />            
+          title={infoTooltip.title}
+          icon={infoTooltip.img}
+          onClose={closeAllPopups} />            
       </div>    
     </CurrentUserContext.Provider>
   );
