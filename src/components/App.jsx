@@ -1,9 +1,7 @@
 import React, { useState , useEffect} from 'react'; // импорт библиотеки
 import { Routes, Route, useNavigate} from 'react-router-dom'
 
-import Header from './Header';
 import Main from './Main';
-import Footer from './Footer';
 import ImagePopup from './ImagePopup';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import ImageAvatar from '../images/image.jpg';
@@ -15,6 +13,8 @@ import ConfirmDeletePopup from './ConfirmDeletePopup';
 import Register from './Register';
 import Login from './Login';
 import ProtectedRouteElement from './ProtectedRoute';
+import { Layout } from './Layout';
+import InfoTooltip from './InfoTooltip';
 
 
 function App() {
@@ -23,6 +23,8 @@ function App() {
   const [isOpenAvatarPopup, setIsOpenAvatarPopup] = useState(false);
   const [isOpenAddCardPopup, setIsOpenAddCardPopup] = useState(false);
   const [isOpenConfirmPopup, setIsOpenConfirmPopup] = useState(false);
+  const [isOpenInfoTooltip, setIsOpenInfoTooltip] = useState(false);
+
   /* стэйт с id карточки на удаление. */
   const [idDeleteCard, setIdDeleteCard] = useState(''); 
   /* в стэйт записывается наименование и картинка карточки для попапа с картинкой. */
@@ -80,7 +82,7 @@ function App() {
   }
   /** Отправляем данные о пользователе на сервер, меняем подпись кнопки сабмита при загрузке,
     *  ответ с новыми данными записываем в глобальный стэйт. */
-  function handleUpdateUser({ name, about}) {
+  function handleUpdateUser({ name, about }) {
     setButtonSaveProfile('Сохранение...')
     api.pushUserInfo({name, about})
       .then(userInformation => {
@@ -95,10 +97,11 @@ function App() {
   /** Отправляем данные для регимстрации пользователя, меняем подпись кнопки сабмита при загрузке,
     *  при положительном ответе переходим в окно входа. */
   const navigate = useNavigate();
-  function handleRegisterUser({ email, password}) {
+  function handleRegisterUser({ email, password }) {    
     setButtonRegistration('Регистрация...')
     api.regisrationNewUser({email, password})
       .then(res => {
+        setIsOpenInfoTooltip(true)
         navigate('/sign-in', {replace: true})        
       })
       .catch((err) => {
@@ -106,12 +109,13 @@ function App() {
       })
       .finally(() => setButtonRegistration('Зарегестрироваться'));    
   }
-  function handleEnterUser({ email, password}) {
+  
+  function handleEnterUser({ email, password }) {    
     setButtonEnter('Проверка...')
-    api.getUserToken({email, password})
-      .then(res => {
-        console.log(res)
-        if(res.token) {
+    api.getUserToken({email, password })
+      .then(res => {        
+        if(res.token) {          
+          localStorage.setItem('jwt', res.token)
           handleLogin()
           navigate('/', {replace: true})
         }       
@@ -125,25 +129,28 @@ function App() {
   useEffect(() => {
     handleTokenCheck();
   }, [])
-
   const handleTokenCheck = () => {
-    if (localStorage.getItem('jwt')){
+    if (localStorage.getItem('jwt')){      
       const localJWT = localStorage.getItem('jwt');
       api.checkUserToken(localJWT).then((res) => {        
-        if (res){
-          setUserAuthInfo(res)
-          setLoggedIn(true);          
+        if (res){          
+          setUserAuthInfo(res.data)
+          handleLogin();          
           navigate("/", {replace: true})
-        }
-        navigate("/sign-in", {replace: true})
+        }       
       });
-    }
-  }  
+    } else {
+      navigate("/sign-in", {replace: true})
+    } 
+  }
+
   const handleSignOut = () => {
     setLoggedIn(false);  
     localStorage.removeItem('jwt');
+    setUserAuthInfo({})
     navigate("/sign-in", {replace: true})  
   }
+
   /** Отправляем ссылку нового аватара пользователя на сервер, меняем подпись кнопки сабмита при загрузке,
     * полученный ответ записываем в глобальный стэйт. */
   function handleUpdateAvatar(avatarUrl) {
@@ -245,35 +252,28 @@ function App() {
 
   return (
     <CurrentUserContext.Provider value={currentUser}>        
-      <div className="content">      
+      <div className="content">     
         <Routes>
-          
-          <Route path='/sign-up' element={  
-            <> 
-              <Header emailUser = {userAuthInfo} loggedIn={loggedIn} onExit={handleSignOut} registration = {true}/>          
-              <Register onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>
-            </>
-          } />
-          <Route path='/sign-in' element={  
-            <>
-              <Header emailUser = {userAuthInfo} loggedIn={loggedIn} onExit={handleSignOut} registartion = {false}/>           
-              <Login onEnterUser={handleEnterUser} buttonText={buttonEnter}/>
-            </>
-          } />
-          <Route path='/' element={ <ProtectedRouteElement component={
-            Main} 
-            cards = {cards}
-            onCardLike={handleCardLike}
-            onCardClick={handleCardClick}
-            onCardDelete={handleDeleteClick}
-            onEditProfile={isEditProfilePopupOpen}         
-            onEditAvatar={isEditAvatarPopupOpen} 
-            onAddPlace={isAddPlacePopupOpen}
-            
-           loggedIn={loggedIn}/>            
-          } />
-        </Routes>          
-        {loggedIn && <Footer />}        
+          <Route to='/' element={<Layout email={userAuthInfo.email}  onExit={handleSignOut}/>}>
+            <Route path='sign-up' element={                        
+              <Register onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>           
+            } />
+            <Route path='sign-in' element={                       
+              <Login onEnterUser={handleEnterUser} buttonText={buttonEnter}/>           
+            } />
+            <Route index element={<ProtectedRouteElement component={Main} 
+              cards = {cards}
+              onCardLike={handleCardLike}
+              onCardClick={handleCardClick}
+              onCardDelete={handleDeleteClick}
+              onEditProfile={isEditProfilePopupOpen}         
+              onEditAvatar={isEditAvatarPopupOpen} 
+              onAddPlace={isAddPlacePopupOpen}
+              
+            loggedIn={loggedIn}/>            
+            } />
+          </Route>
+        </Routes>               
         <EditProfilePopup 
           buttonText={buttonSaveProfile} 
           onUpdateUser={handleUpdateUser} 
@@ -295,7 +295,12 @@ function App() {
           idCard={idDeleteCard} 
           isOpen={isOpenConfirmPopup}
           onClose={closeAllPopups} />                
-        <ImagePopup card={selectedCard} onClose={closeAllPopups}/>            
+        <ImagePopup card={selectedCard} onClose={closeAllPopups}/>
+        <InfoTooltip 
+          isOpen={isOpenInfoTooltip}
+          title 
+          icon 
+          onClose />            
       </div>    
     </CurrentUserContext.Provider>
   );

@@ -82,7 +82,7 @@ class Api {
     })
   }
 
-  checkUserToken({localJWT}) {
+  checkUserToken(localJWT) {
     return fetch('https://auth.nomoreparties.co/users/me', {
       method: 'GET',
       headers: {
@@ -90,6 +90,7 @@ class Api {
         "Authorization" : `Bearer ${localJWT}`
       }      
     })
+    .then(res => this._getResponseData(res))
   }
 
   getUserToken({email, password}) {
