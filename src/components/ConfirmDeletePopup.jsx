@@ -1,7 +1,7 @@
 import React from "react";
 import PopupWithForm from './PopupWithForm';
 
-export default function ConfirmDeletePopup({idCard, buttonText, onClose, isOpen, onCardDelete}) {
+export default function ConfirmDeletePopup({idCard, isOpen, onCardDelete}) {
 
   function handleSubmitDeleteCard(e) {
     /* Запрещаем браузеру переходить по адресу формы */
@@ -16,11 +16,10 @@ export default function ConfirmDeletePopup({idCard, buttonText, onClose, isOpen,
       specClass='popup__form_size_zeroInput' 
       title="Вы уверены?" 
       name="confirmation"
-      buttonStatus={true} 
-      buttonText={buttonText} 
+      buttonStatus={true}       
       onSubmit={handleSubmitDeleteCard}
-      idCard={idCard} 
-      onClose={onClose} 
-      isOpen={isOpen}/>
+      idCard={idCard}       
+      isOpen={isOpen}
+    />
   )
 }

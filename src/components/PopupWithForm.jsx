@@ -1,28 +1,29 @@
-import React from "react";
+import React, {useContext} from "react";
+import Popup from "./Popup";
+import { ButtonTextContext } from "../contexts/ButtonTextContext";
 
-function PopupWithForm({name, isOpen, specClass, title, onClose, onSubmit, children, buttonStatus, buttonText}) {
+function PopupWithForm({name, isOpen, specClass, title, onSubmit, children, buttonStatus}) {
+  const isLoading = useContext(ButtonTextContext)
   return (
-    <div className={`popup popup_${name} ${isOpen ? 'popup_status_active' : ''}`}>
-      <div className={`popup__form ${specClass}`}>
-        <h2 className="popup__title">{title}</h2>
+    <Popup 
+      isOpen={isOpen} 
+      specClass={specClass}
+      title={title}      
+      name={name}
+    >
+      <form onSubmit={onSubmit} name={name} className="popup__form-input" noValidate>
+        {children}
         <button
-          type="button"
-          name="popup__button"
-          className="popup__button-close"
-          onClick={onClose}>
+          type="submit"
+          name="popup__button-save"
+          className={`popup__button-save ${!buttonStatus ? 'popup__button-save_inactive' : ''}`}
+          disabled={!buttonStatus}>            
+          {name === 'edit_profile' || name === 'avatar_edit' ? (!isLoading ? 'Сохранить' : 'Сохранение...') : ''}          
+          {name === 'add_cards' ? (!isLoading ? 'Создать' : 'Создание...') : ''}
+          {name === 'confirmation' ? (!isLoading ? 'Да' : 'Удаление...') : ''}
         </button>
-        <form onSubmit={onSubmit} name={name} className="popup__form-input popup__form-edit-profile" noValidate>
-          {children}
-          <button
-            type="submit"
-            name="popup__button-save"
-            className={`popup__button-save ${!buttonStatus ? 'popup__button-save_inactive' : ''}`}
-            disabled={!buttonStatus}>
-            {buttonText}
-          </button>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Popup>
   )
 }
 
