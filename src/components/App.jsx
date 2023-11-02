@@ -1,11 +1,14 @@
 import React, { useState , useEffect} from 'react'; // импорт библиотеки
-import { Routes, Route, useNavigate} from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 
 import Main from './Main';
 import ImagePopup from './ImagePopup';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import { OnCloseContext } from '../contexts/OnCloseContext';
+import { ButtonTextContext } from '../contexts/ButtonTextContext';
 import ImageAvatar from '../images/image.jpg';
 import api from '../utils/Api';
+import auth from '../utils/auth';
 import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddCardPopup from './AddCardPopup';
@@ -15,7 +18,6 @@ import Login from './Login';
 import ProtectedRouteElement from './ProtectedRoute';
 import { Layout } from './Layout';
 import InfoTooltip from './InfoTooltip';
-
 
 function App() {
   /** Стэйты состояния открытия попапов. */
@@ -34,17 +36,12 @@ function App() {
     name: 'Жак-ив-Кусто',
     about: 'Исследователь, мореплаватель',
     avatar: ImageAvatar
-  })
+  }) 
   /** Глобальный стэйт с объектом карточек. */
   const [cards, setCards] = useState([])
 
-  /** стэйты текстовых значений кнопок сабмита в формах попапов. */
-  const [buttonSaveProfile, setButtonSaveProfile] = useState('Сохранить')
-  const [buttonSaveAvatar, setButtonSaveAvatar] = useState('Сохранить')
-  const [buttonCreateCard, setButtonCreateCard] = useState('Создать')
-  const [buttonConfirm, setButtonConfirm] = useState('Да')
-  const [buttonRegistration, setButtonRegistration] = useState('Зарегестрироваться')
-  const [buttonEnter, setButtonEnter] = useState('Вход')
+  /** стэйты для изменения текста в кнопках сабмита в формах. */  
+  const [isLoading, setIsLoading] = useState(false)
 
   /** Стэйт авторизации пользователя. */
   const [loggedIn, setLoggedIn] = useState(false)
@@ -54,11 +51,11 @@ function App() {
     setLoggedIn(true);
   }
 
-  const [infoTooltip, setInfoTooltip] = useState({title: 'Вы успешно зарегестрировались', img: 'Union.png'})
+  const [infoTooltip, setInfoTooltip] = useState({})
 
   /** Получаем данные с сервера по объединенному запросу и записываем ответы в глобальные стэйты. */
   useEffect(() => {   
-    Promise.all([
+    loggedIn && Promise.all([
       api.getInitialCards(),
       api.getUserInfo()    
     ])
@@ -69,169 +66,148 @@ function App() {
       .catch((err) => {
         console.log(err); 
       })    
-  }, [])
+  }, [loggedIn])
   
   /** Проверяем наличие нашего лайка, по нему определяем в Api какой запрос отправить лайк или дизлайк. */
   function handleCardLike(card) {   
-    const isLiked = card.likes.some(i => i._id === currentUser._id);   
-    api.changeLikeCardStatus(card._id, !isLiked)
-      .then((newCard) => {        
-        setCards((state) => state.map((c) => c._id === card._id ? newCard : c));
-      })
-      .catch((err) => {
-        console.log(err); 
-      });
+    const isLiked = card.likes.some(i => i._id === currentUser._id);  
+    callingBaseToServer({
+      apiMetod: api.changeLikeCardStatus(card._id, !isLiked),
+      thenCallback: (newCard) => {        
+        setCards((state) => state.map((c) => c._id === card._id ? newCard : c));       
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })     
   }
   /** Отправляем данные о пользователе на сервер, меняем подпись кнопки сабмита при загрузке,
     *  ответ с новыми данными записываем в глобальный стэйт. */
   function handleUpdateUser({ name, about }) {
-    setButtonSaveProfile('Сохранение...')
-    api.pushUserInfo({name, about})
-      .then(userInformation => {
+    callingBaseToServer({
+      apiMetod: api.pushUserInfo({name, about}),
+      thenCallback: (userInformation) => {        
         setCurrentUser(userInformation)
-        closeAllPopups()
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => setButtonSaveProfile('Сохранить'));    
+        closeAllPopups()       
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })         
   }
   /** Отправляем данные для регимстрации пользователя, меняем подпись кнопки сабмита при загрузке,
     *  при положительном ответе переходим в окно входа. */
   const navigate = useNavigate();
-  function handleRegisterUser({ email, password }) {    
-    setButtonRegistration('Регистрация...')
-    api.regisrationNewUser({email, password})
-      .then(res => {
+  function handleRegisterUser({ email, password }) {
+    callingBaseToServer({
+      apiMetod: auth.regisrationNewUser({email, password}),
+      thenCallback: (res) => {        
         if(!res.ok) {
           return Promise.reject(`Ошибка: ${res.status}`)            
         }
-        setInfoTooltip({title: 'Вы успешно зарегестрировались!', img: 'Union.png'})
-        setIsOpenInfoTooltip(true)
-        navigate('/sign-in', {replace: true})              
-      })
-      .catch((err) => {
-        console.log(err);
-        setInfoTooltip({title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'})
-        setIsOpenInfoTooltip(true)
-      })
-      .finally(() => setButtonRegistration('Зарегестрироваться'));    
+        setInfoTooltip({title: 'Вы успешно зарегестрировались!', img: 'Union.png'})        
+        navigate('/sign-in', {replace: true})       
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })         
   }
   
-  function handleEnterUser({ email, password }) {    
-    setButtonEnter('Проверка...')
-    api.getUserToken({email, password })
-      .then(res => {        
+  function handleEnterUser({ email, password }) {
+    callingBaseToServer({
+      apiMetod: auth.getUserToken({email, password }),
+      thenCallback: (res) => {        
         if(res.token) {
           setUserAuthInfo({email})          
           localStorage.setItem('jwt', res.token)
           handleLogin()
           navigate('/', {replace: true})
         }       
-      })
-      .catch((err) => {
-        console.log(err);
-        setInfoTooltip({title: 'Неверный логин или пароль!', img: 'Union-red.png'})
-        setIsOpenInfoTooltip(true)
-      })
-      .finally(() => setButtonEnter('Вход'));    
+      },
+      tilteTooltip: {title: 'Неверный логин или пароль!', img: 'Union-red.png'}
+    })         
   }
 
   useEffect(() => {
     handleTokenCheck();
   }, [])
+
   const handleTokenCheck = () => {
     if (localStorage.getItem('jwt')){      
       const localJWT = localStorage.getItem('jwt');
-      api.checkUserToken(localJWT).then((res) => {        
-        if (res){          
-          setUserAuthInfo(res.data)
-          handleLogin();          
-          navigate("/", {replace: true})
-        }       
-      });
+      callingBaseToServer({
+        apiMetod: auth.checkUserToken(localJWT),
+        thenCallback: (res) => {        
+          if (res){          
+            setUserAuthInfo(res.data)
+            handleLogin();          
+            navigate("/", {replace: true})
+          }       
+        }
+      })      
     } else {
       navigate("/sign-in", {replace: true})
     } 
-  }
+  }       
 
   const handleSignOut = () => {
     setLoggedIn(false);  
     localStorage.removeItem('jwt');
     setUserAuthInfo({})
     navigate("/sign-in", {replace: true})  
-  }
+  }  
 
+  
+  /** Базовая функция для обращения к серверу и обработки ответа,
+    * принимает апи метод и колбэк then так как обрабтка промиса индивидуальная. */
+  function callingBaseToServer ({apiMetod, thenCallback, tilteTooltip}) {
+    setIsLoading(true)
+    apiMetod
+      .then(thenCallback)
+      .catch((err) => {
+        setInfoTooltip(tilteTooltip)
+        setIsOpenInfoTooltip(true)
+        console.log(err);
+      })
+      .finally(() => {        
+        setIsLoading(false)
+      })
+  }
   /** Отправляем ссылку нового аватара пользователя на сервер, меняем подпись кнопки сабмита при загрузке,
     * полученный ответ записываем в глобальный стэйт. */
   function handleUpdateAvatar(avatarUrl) {
-    setButtonSaveAvatar('Сохранение...')
-    api.pushAvatar(avatarUrl)
-      .then(newAvatar => {
-        setCurrentUser(newAvatar)
-        closeAllPopups()      
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => setButtonSaveAvatar('Сохранить'));    
+    callingBaseToServer({
+      apiMetod: api.pushAvatar(avatarUrl),
+      thenCallback: (newAvatar) => {        
+        setCurrentUser(newAvatar);
+        closeAllPopups()
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })        
   }
   /** Отправялеем данные карточки на сервер, меняем подпись кнопки сабмита при загрузке,
     * полученную карточку подгружаем в глобальный стэйт. */
   function handleAddCard({name, url}) {
-    setButtonCreateCard("Создание...")
-    api.pushInfoCreateCard({name, url})
-      .then(newCard => {
-        console.log(newCard)
+    callingBaseToServer({
+      apiMetod: api.pushInfoCreateCard({name, url}),
+      thenCallback: (newCard) => {        
         setCards([newCard, ...cards])
         closeAllPopups()
-      })
-      .catch((err) => {
-        console.log(err); // выведем ошибку в консоль
-      })
-      .finally(() => setButtonCreateCard('Создать'));      
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })          
   }
   /** По id карточки отправляем запрос на удаление, после ответа фильтруем карточки 
     * в глобальном стэйте по id и возврящаем все кроме той что удалили. */
   function handleCardDelete(cardId) {
-    setButtonConfirm('Удаление...')
-    api.deleteCard(cardId)
-      .then(() => {
+    callingBaseToServer({
+      apiMetod: api.deleteCard(cardId),
+      thenCallback: () => {        
         setCards((cards) => cards.filter(item => {          
           return item._id !== cardId
         }));
         setIdDeleteCard('');  
         closeAllPopups()
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => setButtonConfirm('Да'));    
-  }
-  /** Проверяем состояние стэйтов открытия попапов, если хоть один открыт - true. */
-  const isSomePopupOpen = isOpenProfilePopup || isOpenAvatarPopup || isOpenAddCardPopup || isOpenConfirmPopup || selectedCard || isOpenInfoTooltip
-  /** Если хоть один попап открыт то вешаем слушатели на документ. */
-  useEffect(() => {
-    function closePopupByEsc (key) {    
-      if (key.key === 'Escape') {
-        closeAllPopups()
-      }
-    }
-    function closePopupByClickOverlay (e) {
-      if (e.target.classList.contains('popup')) {
-        closeAllPopups()
-      }
-    }
-    if(isSomePopupOpen) {
-      document.addEventListener("keydown", closePopupByEsc);
-      document.addEventListener('click', closePopupByClickOverlay);
-      return () => {
-        document.removeEventListener("keydown", closePopupByEsc);
-        document.removeEventListener('click', closePopupByClickOverlay);
-      }
-    }   
-  }, [isSomePopupOpen])
-
+      },
+      tilteTooltip: {title: 'Что-то пошло не так! Попробуйте еще раз.', img: 'Union-red.png'}
+    })        
+  }  
+  
   function handleCardClick({name, link}) {    
     setSelectedCard({name, link})
   };   
@@ -264,58 +240,53 @@ function App() {
   };
 
   return (
+    <OnCloseContext.Provider value={closeAllPopups}>
+    <ButtonTextContext.Provider value={isLoading}>
     <CurrentUserContext.Provider value={currentUser}>        
       <div className="content">     
         <Routes>
-          <Route to='/' element={<Layout email={userAuthInfo.email}  onExit={handleSignOut}/>}>
+          <Route to='/' element={<Layout email={userAuthInfo.email} onExit={handleSignOut}/>}>
             <Route path='sign-up' element={                        
-              <Register onRegisterUser={handleRegisterUser} buttonText={buttonRegistration}/>           
+              <Register nameForm='registration' onRegisterUser={handleRegisterUser} />           
             } />
             <Route path='sign-in' element={                       
-              <Login onEnterUser={handleEnterUser} buttonText={buttonEnter}/>           
+              <Login nameForm='login' onEnterUser={handleEnterUser} />           
             } />
-            <Route index element={<ProtectedRouteElement component={Main} 
+            <Route index element={<ProtectedRouteElement component={ Main } 
               cards = {cards}
               onCardLike={handleCardLike}
               onCardClick={handleCardClick}
               onCardDelete={handleDeleteClick}
               onEditProfile={isEditProfilePopupOpen}         
               onEditAvatar={isEditAvatarPopupOpen} 
-              onAddPlace={isAddPlacePopupOpen}
-              
-            loggedIn={loggedIn}/>            
+              onAddPlace={isAddPlacePopupOpen}              
+              loggedIn={loggedIn}/>            
             } />
           </Route>
         </Routes>               
-        <EditProfilePopup 
-          buttonText={buttonSaveProfile} 
+        <EditProfilePopup            
           onUpdateUser={handleUpdateUser} 
-          isOpen={isOpenProfilePopup} 
-          onClose={closeAllPopups} />
-        <EditAvatarPopup 
-          buttonText={buttonSaveAvatar} 
+          isOpen={isOpenProfilePopup} />
+        <EditAvatarPopup           
           onUpdateAvatar={handleUpdateAvatar} 
-          isOpen={isOpenAvatarPopup}
-          onClose={closeAllPopups} />  
-        <AddCardPopup 
-          buttonText={buttonCreateCard} 
+          isOpen={isOpenAvatarPopup} />  
+        <AddCardPopup           
           onAddCard={handleAddCard} 
-          isOpen={isOpenAddCardPopup}
-          onClose={closeAllPopups} />
-        <ConfirmDeletePopup 
-          buttonText={buttonConfirm} 
+          isOpen={isOpenAddCardPopup} />
+        <ConfirmDeletePopup           
           onCardDelete={handleCardDelete} 
           idCard={idDeleteCard} 
-          isOpen={isOpenConfirmPopup}
-          onClose={closeAllPopups} />                
-        <ImagePopup card={selectedCard} onClose={closeAllPopups}/>
+          isOpen={isOpenConfirmPopup} />                
+        <ImagePopup 
+          card={selectedCard} />
         <InfoTooltip 
           isOpen={isOpenInfoTooltip}
           title={infoTooltip.title}
-          icon={infoTooltip.img}
-          onClose={closeAllPopups} />            
+          icon={infoTooltip.img} />            
       </div>    
     </CurrentUserContext.Provider>
+    </ButtonTextContext.Provider>
+    </OnCloseContext.Provider>    
   );
 }
 

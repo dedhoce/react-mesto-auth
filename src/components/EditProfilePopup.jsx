@@ -1,54 +1,30 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import PopupWithForm from './PopupWithForm';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import { useFormAndValidation } from "../hooks/useFormAndValidation";
+import { LabelForForm } from "./LabelForForm";
 
-function EditProfilePopup({isOpen, onUpdateUser, buttonText, onClose}) {
+function EditProfilePopup({ isOpen, onUpdateUser }) {
+
+  const {values, handleChange, errors, isValid, resetForm} = useFormAndValidation()
+
   //подписываемся на контекст стэйта с данными пользователя
   const currentUser = useContext(CurrentUserContext)
-  //стэйты значений input.value
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('') 
   
-  //стэйты состояния валидности инпутов
-  const [isNameValid, setIsNameValid] = useState(false)
-  const [isDescriptionValid, setIsDescriptionValid] = useState(false)
-  /** Стэйты для хранения сообщения валидации, чтоб показывать актуальное в форме */
-  const [nameErrorMessage, setNameErrorMessage] = useState('')
-  const [descriptionErrorMessage, setDescriptionErrorMessage] = useState('')
-  /* если хоть один стэйт валидности false то общее значение - false(передаем в PopupWithForm, что влиять на кнопку сабмита) */
-  const isFormValid = isNameValid || isDescriptionValid 
-
   //обновляем значение input.value на сохраненное в глобальном стэйте
   //каждый раз при изменении глобального стейта и изменении состояния попапа
   useEffect((isOpen) => {
-    if(!isOpen) {
-      setName(currentUser.name);
-      setDescription(currentUser.about);
-      setNameErrorMessage('')
-      setDescriptionErrorMessage('')
-      setIsNameValid(false)
-      setIsDescriptionValid(false)
+    if(!isOpen) {      
+      resetForm({name: currentUser.name, description: currentUser.about}, {}, false)
     }
-  }, [currentUser, isOpen]);
-
-  //записываем текущее значенени и валидность input.value в стэйты
-  function handleInputName (e) {
-    setName(e.target.value)
-    setIsNameValid(e.target.validity.valid)
-    setNameErrorMessage(e.target.validationMessage)    
-  };
-  function handleInputDescription (e) {  
-    setDescription(e.target.value)
-    setIsDescriptionValid(e.target.validity.valid)
-    setDescriptionErrorMessage(e.target.validationMessage)   
-  };
+  }, [currentUser, isOpen]);  
 
   //передаем данные стэйтов в запрос к серверу при сабмите
   function handleSubmit(e) {  
-    e.preventDefault();  
+    e.preventDefault();      
     onUpdateUser({
-      name: name,
-      about: description,
+      name: values.name,
+      about: values.description
     });
   } 
   return ( 
@@ -56,53 +32,33 @@ function EditProfilePopup({isOpen, onUpdateUser, buttonText, onClose}) {
       specClass='' 
       title="Редактировать профиль" 
       name="edit_profile" 
-      buttonStatus={isFormValid}
-      buttonText={buttonText} 
-      onSubmit={handleSubmit} 
-      onClose={onClose} 
+      buttonStatus={isValid}       
+      onSubmit={handleSubmit}        
       isOpen={isOpen} >        
-      <label className="popup__form-field">            
-        <input                  
-          type="text"
-          name="name"
-          className="popup__text popup__text_type_name"
-          id="popup-name"
-          value={name ? name : ''}
-          onChange={handleInputName}
-          placeholder = "Новое имя пользователя"
-          required minLength="2" maxLength="40"/>
-        <button 
-          onClick={() => setName('')} 
-          type='button' 
-          name='button-clear-input-name' 
-          className={`popup__button-clear-input ${name ? 'popup__button-clear-input_status_active' : ''}`} 
-          tabIndex='-1'
-          disabled={!name}></button>
-        <span className={`popup__text-error popup-name-error ${!isNameValid ? "popup__text-error_active" : ''}`}>
-          {!(name === '') && (!isNameValid && name) ? nameErrorMessage : ''}
-        </span>
-      </label>
-      <label className="popup__form-field">
-        <input                 
-          type="text"
-          name="subname"
-          className="popup__text popup__text_type_subname"
-          id="popup-subname"
-          value={description ? description : ''}
-          onChange={handleInputDescription}
-          placeholder = "Информация о пользователе"
-          required minLength="2" maxLength="200"/>
-        <button 
-          onClick={() => setDescription('')} 
-          type='button' 
-          name='button-clear-input-description' 
-          className={`popup__button-clear-input ${description ? 'popup__button-clear-input_status_active' : ''}`}
-          tabIndex='-1'
-          disabled={!description}></button>
-        <span className={`popup__text-error popup-subname-error ${!isDescriptionValid ? "popup__text-error_active" : ''}`}>
-          {!(description === '') && (!isDescriptionValid && description) ? descriptionErrorMessage : ''}
-        </span>
-      </label>           
+      <LabelForForm 
+        typeInput="text"
+        name="name"
+        value={values.name}
+        onChange={handleChange}
+        placeholder="Новое имя пользователя"
+        onClick={() => resetForm({...values, name: ''}, {}, false)}
+        isValid={isValid}
+        errors={errors.name}
+        minLength='2'
+        maxLength='40'
+      />
+      <LabelForForm 
+        typeInput="text"
+        name="description"
+        value={values.description}
+        onChange={handleChange}
+        placeholder="Информация о пользователе"
+        onClick={() => resetForm({...values, description: ''}, {}, false)}
+        isValid={isValid}
+        errors={errors.description}
+        minLength='2'
+        maxLength='200'
+      />                 
     </PopupWithForm>
   )
 }

@@ -1,19 +1,19 @@
 import React from "react";
+import Popup from "./Popup";
 
 function ImagePopup({card, onClose}) {   
   return (
-    <div className={`popup popup_overlay_dark popup_zoom_image  ${card ? 'popup_status_active' : ''}`}>
-      <div className="popup__group">
-        <button
-          type="button"
-          name="popup__button"
-          className="popup__button-close"
-          onClick={onClose}>
-        </button>
+    <Popup
+      isOpen={card}
+      onClose={onClose}
+      name={'overlay_dark'}      
+      specClass={'popup__group'}
+      flag={true}>      
+      <>
         <img src={card?.link} alt={card?.name} className="popup__zoom-image" />
         <p className="popup__caption">{card?.name}</p>
-      </div>
-    </div>
+      </>
+    </Popup>   
   )
 }
 

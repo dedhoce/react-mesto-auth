@@ -27,3 +27,10 @@
     margin-bottom: 45px;
   }
 }
+
+.regist__input:-webkit-autofill {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0px 1000px #000 inset;
+  transition: background-color 5000s ease-in-out 0s;
+}

@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 
-const Layout = ({loggedIn, ...props}) => {
+const Layout = ({loggedIn, ...props}) => {    
     return (
         <>
             <Header {...props}/>        

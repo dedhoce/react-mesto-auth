@@ -27,7 +27,7 @@ function useWindowDimensions() {
 
 function Header({email, onExit}) {    
   const location = useLocation(); 
-  const { height, width } = useWindowDimensions()
+  const { width } = useWindowDimensions()
 
   const [isBarOpen, setIsBarOpen] = useState(false)
 

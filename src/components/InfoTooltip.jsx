@@ -1,6 +1,9 @@
-import React from "react";
+import React, {useContext} from "react";
+import { OnCloseContext } from "../contexts/OnCloseContext";
 
-function InfoTooltip({isOpen, title, icon, onClose}) {
+function InfoTooltip({isOpen, title, icon}) {
+  const closeAllPopups = useContext(OnCloseContext)
+  
   return (
     <div className={`popup ${isOpen ? 'popup_status_active' : ''}`}>
       <div className='popup__form tooltip'>
@@ -10,7 +13,7 @@ function InfoTooltip({isOpen, title, icon, onClose}) {
           type="button"
           name="popup__button"
           className="popup__button-close"
-          onClick={onClose}>
+          onClick={closeAllPopups}>
         </button>        
       </div>
     </div>
