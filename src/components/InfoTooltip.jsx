@@ -1,23 +1,16 @@
-import React, {useContext} from "react";
-import { OnCloseContext } from "../contexts/OnCloseContext";
+import React from "react";
+import Popup from "./Popup";
 
-function InfoTooltip({isOpen, title, icon}) {
-  const closeAllPopups = useContext(OnCloseContext)
-  
+function InfoTooltip({ isOpen, title, icon }) {
   return (
-    <div className={`popup ${isOpen ? 'popup_status_active' : ''}`}>
-      <div className='popup__form tooltip'>
-        {icon ? <img src={require (`../images/${icon}`)} alt="#" className="tooltip__image" /> : ''}
-        <h2 className="popup__title tooltip__title">{title}</h2>        
-        <button
-          type="button"
-          name="popup__button"
-          className="popup__button-close"
-          onClick={closeAllPopups}>
-        </button>        
-      </div>
-    </div>
-  )
+    <Popup 
+      isOpen={isOpen}
+      name='tooltip'
+      title={title}
+      icon={icon}
+      specClass='tooltip'
+    />    
+  );
 }
 
-export default InfoTooltip
+export default InfoTooltip;

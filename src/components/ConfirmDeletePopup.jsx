@@ -1,7 +1,17 @@
-import React from "react";
-import PopupWithForm from './PopupWithForm';
+import React, { useContext, useState, useEffect } from "react";
+import PopupWithForm from "./PopupWithForm";
+import { ButtonTextContext } from "../contexts/ButtonTextContext";
 
-export default function ConfirmDeletePopup({idCard, isOpen, onCardDelete}) {
+export default function ConfirmDeletePopup({ idCard, isOpen, onCardDelete }) {
+  const isLoading = useContext(ButtonTextContext);
+
+  const [buttonText, setButtonText] = useState('')
+
+  useEffect(() => {
+    !isLoading 
+      ? setButtonText("Да") 
+      : setButtonText("Удаление...")
+  }, [isLoading]);
 
   function handleSubmitDeleteCard(e) {
     /* Запрещаем браузеру переходить по адресу формы */
@@ -12,14 +22,15 @@ export default function ConfirmDeletePopup({idCard, isOpen, onCardDelete}) {
   }
 
   return (
-    <PopupWithForm 
-      specClass='popup__form_size_zeroInput' 
-      title="Вы уверены?" 
+    <PopupWithForm
+      specClass="popup__form_size_zeroInput"
+      title="Вы уверены?"
       name="confirmation"
-      buttonStatus={true}       
+      buttonStatus={true}
       onSubmit={handleSubmitDeleteCard}
-      idCard={idCard}       
+      idCard={idCard}
       isOpen={isOpen}
+      buttonText={buttonText}
     />
-  )
+  );
 }

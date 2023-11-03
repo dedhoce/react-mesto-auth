@@ -1,15 +1,15 @@
-import { Outlet } from 'react-router-dom';
-import Header from './Header';
-import Footer from './Footer';
+import { Outlet } from "react-router-dom";
+import Header from "./Header";
+import Footer from "./Footer";
 
-const Layout = ({loggedIn, ...props}) => {    
-    return (
-        <>
-            <Header {...props}/>        
-            <Outlet />
-            {loggedIn ? <Footer /> : ''}
-        </>
-    )
-}
+const Layout = ({ loggedIn, ...props }) => {
+  return (
+    <>
+      <Header {...props} />
+      <Outlet />
+      {loggedIn ? <Footer /> : ""}
+    </>
+  );
+};
 
-export {Layout}
+export { Layout };

@@ -1,66 +1,86 @@
-import React, { useContext, useEffect } from "react";
-import PopupWithForm from './PopupWithForm';
-import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import React, { useContext, useEffect, useState } from "react";
+import PopupWithForm from "./PopupWithForm";
+import { CurrentUserContext } from "../contexts/CurrentUserContext";
 import { useFormAndValidation } from "../hooks/useFormAndValidation";
 import { LabelForForm } from "./LabelForForm";
+import { ButtonTextContext } from "../contexts/ButtonTextContext";
 
 function EditProfilePopup({ isOpen, onUpdateUser }) {
+  const isLoading = useContext(ButtonTextContext);
 
-  const {values, handleChange, errors, isValid, resetForm} = useFormAndValidation()
+  const [buttonText, setButtonText] = useState('')
+
+  useEffect(() => {
+    !isLoading 
+      ? setButtonText("Сохранить") 
+      : setButtonText("Сохранение...")
+  }, [isLoading]);  
+
+  const { values, handleChange, errors, isValid, resetForm } =
+    useFormAndValidation();
 
   //подписываемся на контекст стэйта с данными пользователя
-  const currentUser = useContext(CurrentUserContext)
-  
+  const currentUser = useContext(CurrentUserContext);
+
   //обновляем значение input.value на сохраненное в глобальном стэйте
   //каждый раз при изменении глобального стейта и изменении состояния попапа
-  useEffect((isOpen) => {
-    if(!isOpen) {      
-      resetForm({name: currentUser.name, description: currentUser.about}, {}, false)
-    }
-  }, [currentUser, isOpen]);  
+  useEffect(
+    (isOpen) => {
+      if (!isOpen) {
+        resetForm(
+          { name: currentUser.name, description: currentUser.about },
+          {},
+          false
+        );
+      }
+    },
+    [currentUser, isOpen]
+  );
 
   //передаем данные стэйтов в запрос к серверу при сабмите
-  function handleSubmit(e) {  
-    e.preventDefault();      
+  function handleSubmit(e) {
+    e.preventDefault();
     onUpdateUser({
       name: values.name,
-      about: values.description
+      about: values.description,
     });
-  } 
-  return ( 
-    <PopupWithForm 
-      specClass='' 
-      title="Редактировать профиль" 
-      name="edit_profile" 
-      buttonStatus={isValid}       
-      onSubmit={handleSubmit}        
-      isOpen={isOpen} >        
-      <LabelForForm 
+  }
+  return (
+    <PopupWithForm
+      specClass=""
+      title="Редактировать профиль"
+      name="edit_profile"
+      buttonStatus={isValid}
+      onSubmit={handleSubmit}
+      isOpen={isOpen}
+      buttonText={buttonText}
+    >
+      <LabelForForm
         typeInput="text"
         name="name"
         value={values.name}
         onChange={handleChange}
         placeholder="Новое имя пользователя"
-        onClick={() => resetForm({...values, name: ''}, {}, false)}
+        onClick={() => resetForm({ ...values, name: "" }, {}, false)}
         isValid={isValid}
         errors={errors.name}
-        minLength='2'
-        maxLength='40'
+        minLength="2"
+        maxLength="40"
       />
-      <LabelForForm 
+      <LabelForForm
         typeInput="text"
         name="description"
         value={values.description}
         onChange={handleChange}
         placeholder="Информация о пользователе"
-        onClick={() => resetForm({...values, description: ''}, {}, false)}
+        onClick={() => resetForm({ ...values, description: "" }, {}, false)}
         isValid={isValid}
         errors={errors.description}
-        minLength='2'
-        maxLength='200'
-      />                 
+        minLength="2"
+        maxLength="200"
+      />
     </PopupWithForm>
-  )
+  );
 }
 
-export default EditProfilePopup
+export default EditProfilePopup;
