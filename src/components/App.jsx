@@ -1,5 +1,5 @@
 import React, { useState , useEffect} from 'react'; // импорт библиотеки
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 
 import Main from './Main';
 import ImagePopup from './ImagePopup';
@@ -246,6 +246,7 @@ function App() {
       <div className="content">     
         <Routes>
           <Route to='/' element={<Layout email={userAuthInfo.email} onExit={handleSignOut}/>}>
+            <Route path='*' element={<Navigate to='/' replace/>} />
             <Route path='sign-up' element={                        
               <Register nameForm='registration' onRegisterUser={handleRegisterUser} />           
             } />
